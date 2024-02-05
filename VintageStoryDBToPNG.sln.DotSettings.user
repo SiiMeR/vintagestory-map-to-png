@@ -1,0 +1,18 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=C_003A_005CUsers_005Csiimr_005CAppData_005CRoaming_005CVintagestory_005CLib_005CSQLite_002EInterop_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=C_003A_005CUsers_005Csiimr_005CAppData_005CRoaming_005CVintagestory_005CLib_005CSystem_002EData_002ESQLite_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=C_003A_005CUsers_005Csiimr_005CAppData_005CRoaming_005CVintagestory_005CMods_005CVSCreativeMod_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=C_003A_005CUsers_005Csiimr_005CAppData_005CRoaming_005CVintagestory_005CMods_005CVSEssentials_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=C_003A_005CUsers_005Csiimr_005CAppData_005CRoaming_005CVintagestory_005CMods_005CVSSurvivalMod_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=C_003A_005CUsers_005Csiimr_005CAppData_005CRoaming_005CVintagestory_005CVintagestory_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=C_003A_005CUsers_005Csiimr_005CAppData_005CRoaming_005CVintagestory_005CVintagestoryAPI_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=C_003A_005CUsers_005Csiimr_005CAppData_005CRoaming_005CVintagestory_005CVintagestoryLib_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
+  &lt;Assembly Path="C:\Users\siimr\AppData\Roaming\Vintagestory\VintagestoryAPI.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\siimr\AppData\Roaming\Vintagestory\VintagestoryLib.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\siimr\AppData\Roaming\Vintagestory\Vintagestory.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\siimr\AppData\Roaming\Vintagestory\Mods\VSEssentials.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\siimr\AppData\Roaming\Vintagestory\Mods\VSSurvivalMod.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\siimr\AppData\Roaming\Vintagestory\Mods\VSCreativeMod.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\siimr\.nuget\packages\google.protobuf\3.25.2\lib\net5.0\Google.Protobuf.dll" /&gt;&#xD;
+&lt;/AssemblyExplorer&gt;</s:String></wpf:ResourceDictionary>
