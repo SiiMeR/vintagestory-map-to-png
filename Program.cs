@@ -15,11 +15,16 @@ static class Program
 
     static void CreateMapWithBounds(int minX, int maxX, int minY, int maxY, string mapFileName)
     {
+        if (!File.Exists(mapFileName))
+        {
+            throw new Exception($"No map file found at {mapFileName}");
+        }
+        
         // Assuming each chunk has 32x32 pixels
         int chunkWidth = 32;
         int chunkHeight = 32;
 
-        string dbFilePath = mapFileName;
+        string dbFilePath = Path.IsPathRooted(mapFileName) ? mapFileName : Path.Combine(Directory.GetCurrentDirectory(), mapFileName);
 
         using SQLiteConnection connection = new SQLiteConnection($"Data Source={dbFilePath};Version=3;");
         connection.Open();

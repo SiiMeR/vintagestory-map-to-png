@@ -13,8 +13,10 @@ from a .db file and export them to a .png file.
      * MinY - The uppermost coordinate the map will be exported from (in VS, the Y coordinates are flipped)
      * MaxY - The lowermost coordinate the map will be export to
 
-2. Run the provided .exe file
+2. Run the provided `VintageStoryDBToPNG.exe` file
 3. The map will be exported to the same directory
+
+**The map colors are from the [Medieval Map](https://mods.vintagestory.at/medievalmap) mod**
 
 ## Limitations
 
