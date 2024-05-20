@@ -1,135 +1,160 @@
-﻿#pragma warning disable CA1416
-using System.Data.SQLite;
+﻿using System.Data.SQLite;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace VintageStoryDBToPNG;
-
-static class Program
+namespace VintageStoryDBToPNG
 {
-    static void Main()
+    static class Program
     {
-        var config = ConfigHelpers.ReadConfig("config.json");
-        CreateMapWithBounds(config.MinX, config.MaxX, config.MinY, config.MaxY, config.MapFile);
-    }
-
-    static void CreateMapWithBounds(int minX, int maxX, int minY, int maxY, string mapFileName)
-    {
-        if (!File.Exists(mapFileName))
+        static void Main()
         {
-            throw new Exception($"No map file found at {mapFileName}");
+            var config = ConfigHelpers.ReadConfig("config.json");
+            CreateMapWithBounds(config.MinX, config.MaxX, config.MinY, config.MaxY, config.MapFile);
         }
-        
-        // Assuming each chunk has 32x32 pixels
-        int chunkWidth = 32;
-        int chunkHeight = 32;
 
-        string dbFilePath = Path.IsPathRooted(mapFileName) ? mapFileName : Path.Combine(Directory.GetCurrentDirectory(), mapFileName);
-
-        using SQLiteConnection connection = new SQLiteConnection($"Data Source={dbFilePath};Version=3;");
-        connection.Open();
-
-        string query = "SELECT * FROM mappiece";
-
-        using SQLiteCommand command = new SQLiteCommand(query, connection);
-        using SQLiteDataReader reader = command.ExecuteReader();
-
-        List<MapPiece> mapPieces = new List<MapPiece>();
-
-        Console.WriteLine("Reading map DB...");
-        while (reader.Read())
+        static void CreateMapWithBounds(int minX, int maxX, int minY, int maxY, string mapFileName)
         {
-            var position = Convert.ToUInt64(reader["position"]);
-            byte[] data = (byte[])reader["data"];
-
-            var mapPiece = SerializerUtil.Deserialize<MapPieceColors>(data);
-
-            var coordinates = ChunkConverter.FromChunkIndex(position);
-
-            if (coordinates.X * chunkWidth >= minX && coordinates.X * chunkWidth <= maxX &&
-                coordinates.Y * chunkHeight >= minY && coordinates.Y * chunkHeight <= maxY)
+            if (!File.Exists(mapFileName))
             {
-                mapPieces.Add(new MapPiece(mapPiece, coordinates));
+                throw new Exception($"No map file found at {mapFileName}");
             }
-        }
+            
+            // Assuming each chunk has 32x32 pixels
+            int chunkWidth = 32;
+            int chunkHeight = 32;
 
-        Console.WriteLine($"Loaded {mapPieces.Count} chunks from map DB");
-        /*
-    Image image = CreateImageFromColors(mapPieces[0].Colors.Pixels, 32, 32);
-    File.Delete($"chunk_{reader["position"]}.png");
-    string imagePath = $"chunk_{reader["position"]}.png";
-    image.Save(imagePath, ImageFormat.Png);
+            string dbFilePath = Path.IsPathRooted(mapFileName) ? mapFileName : Path.Combine(Directory.GetCurrentDirectory(), mapFileName);
 
-    */
+            using SQLiteConnection connection = new SQLiteConnection($"Data Source={dbFilePath};Version=3;");
+            connection.Open();
 
+            string query = "SELECT * FROM mappiece";
 
-        // Create an image with all chunks
-        Image combinedImage = CreateCombinedImage(mapPieces, chunkWidth, chunkHeight);
+            using SQLiteCommand command = new SQLiteCommand(query, connection);
+            using SQLiteDataReader reader = command.ExecuteReader();
 
-        var fileName = $"{Path.GetFileNameWithoutExtension(mapFileName)}_exported.png";
-        Console.WriteLine($"Exporting map to {fileName}");
-        string combinedImagePath = fileName;
-        combinedImage.Save(combinedImagePath, ImageFormat.Png);
+            List<MapPiece> mapPieces = new List<MapPiece>();
 
-        Console.WriteLine("Success");
-    }
-
-
-    static Image CreateCombinedImage(List<MapPiece> mapPieces, int chunkWidth, int chunkHeight)
-    {
-        int totalChunks = mapPieces.Count;
-
-        // Find the minimum X and Y coordinates
-        int minX = mapPieces.Min(piece => piece.Coordinates.X);
-        int minY = mapPieces.Min(piece => piece.Coordinates.Y);
-
-        // Calculate the normalized width and height of the combined image
-        int totalWidth = (mapPieces.Max(piece => piece.Coordinates.X) - minX + 1) * chunkWidth;
-        int totalHeight = (mapPieces.Max(piece => piece.Coordinates.Y) - minY + 1) * chunkHeight;
-
-        Console.WriteLine($"Creating image with width {totalWidth} and height {totalHeight}");
-
-        Bitmap combinedImage = new Bitmap(totalWidth, totalHeight);
-
-
-        using Graphics g = Graphics.FromImage(combinedImage);
-        for (int i = 0; i < totalChunks; i++)
-        {
-            var mapPiece = mapPieces[i];
-
-            for (int y = 0; y < chunkHeight; y++)
+            Console.WriteLine("Reading map DB...");
+            while (reader.Read())
             {
-                for (int x = 0; x < chunkWidth; x++)
+                var position = Convert.ToUInt64(reader["position"]);
+                byte[] data = (byte[])reader["data"];
+
+                var mapPiece = SerializerUtil.Deserialize<MapPieceColors>(data);
+
+                var coordinates = ChunkConverter.FromChunkIndex(position);
+
+                if (coordinates.X * chunkWidth >= minX && coordinates.X * chunkWidth <= maxX &&
+                    coordinates.Y * chunkHeight >= minY && coordinates.Y * chunkHeight <= maxY)
                 {
-                    int normalizedX = (mapPiece.Coordinates.X - minX) * chunkWidth + x;
-                    int normalizedY = (mapPiece.Coordinates.Y - minY) * chunkHeight + y;
-
-                    int pixelIndex = y * chunkWidth + x;
-                    var color = PixelColorConverter.ConvertToColor(mapPiece.Colors.Pixels[pixelIndex]);
-
-                    // Set pixel in the combined image
-                    combinedImage.SetPixel(normalizedX, normalizedY, color);
+                    mapPieces.Add(new MapPiece(mapPiece, coordinates));
                 }
             }
+
+            Console.WriteLine($"Loaded {mapPieces.Count} chunks from map DB");
+
+            // Create and save tiled images
+            var tilePaths = CreateAndSaveTiledImages(mapPieces, chunkWidth, chunkHeight, out int finalWidth, out int finalHeight);
+
+            // Stitch tiles together
+            StitchTiles(tilePaths, finalWidth, finalHeight);
+
+            Console.WriteLine("Success");
         }
 
-        return combinedImage;
-    }
-
-    static Image CreateImageFromColors(int[] colors, int width, int height)
-    {
-        Bitmap image = new Bitmap(width, height);
-
-        for (int y = 0; y < height; y++)
+        static List<string> CreateAndSaveTiledImages(List<MapPiece> mapPieces, int chunkWidth, int chunkHeight, out int finalWidth, out int finalHeight)
         {
-            for (int x = 0; x < width; x++)
+            int tileSize = 8192; // Define the tile size (e.g., 8192x8192 pixels)
+            int totalChunks = mapPieces.Count;
+
+            // Find the minimum X and Y coordinates
+            int minX = mapPieces.Min(piece => piece.Coordinates.X);
+            int minY = mapPieces.Min(piece => piece.Coordinates.Y);
+
+            // Calculate the normalized width and height of the combined image
+            finalWidth = (mapPieces.Max(piece => piece.Coordinates.X) - minX + 1) * chunkWidth;
+            finalHeight = (mapPieces.Max(piece => piece.Coordinates.Y) - minY + 1) * chunkHeight;
+
+            int horizontalTiles = (int)Math.Ceiling((double)finalWidth / tileSize);
+            int verticalTiles = (int)Math.Ceiling((double)finalHeight / tileSize);
+
+            List<string> tilePaths = new List<string>();
+
+            for (int tileY = 0; tileY < verticalTiles; tileY++)
             {
-                int index = y * width + x;
-                Color color = PixelColorConverter.ConvertToColor(colors[index]);
-                image.SetPixel(x, y, color);
+                for (int tileX = 0; tileX < horizontalTiles; tileX++)
+                {
+                    int startX = tileX * tileSize;
+                    int startY = tileY * tileSize;
+                    int endX = Math.Min(startX + tileSize, finalWidth);
+                    int endY = Math.Min(startY + tileSize, finalHeight);
+
+                    Console.WriteLine($"Creating tile ({tileX}, {tileY}) with bounds ({startX}, {startY}) to ({endX}, {endY})");
+
+                    Bitmap tileImage = new Bitmap(tileSize, tileSize);
+
+                    using Graphics g = Graphics.FromImage(tileImage);
+                    g.Clear(Color.White); // Fill the background with white
+
+                    foreach (var mapPiece in mapPieces)
+                    {
+                        int pieceX = (mapPiece.Coordinates.X - minX) * chunkWidth;
+                        int pieceY = (mapPiece.Coordinates.Y - minY) * chunkHeight;
+
+                        if (pieceX < endX && pieceX + chunkWidth > startX && pieceY < endY && pieceY + chunkHeight > startY)
+                        {
+                            for (int y = 0; y < chunkHeight; y++)
+                            {
+                                for (int x = 0; x < chunkWidth; x++)
+                                {
+                                    int normalizedX = pieceX + x - startX;
+                                    int normalizedY = pieceY + y - startY;
+
+                                    if (normalizedX >= 0 && normalizedX < tileSize && normalizedY >= 0 && normalizedY < tileSize)
+                                    {
+                                        int pixelIndex = y * chunkWidth + x;
+                                        var color = PixelColorConverter.ConvertToColor(mapPiece.Colors.Pixels[pixelIndex]);
+
+                                        tileImage.SetPixel(normalizedX, normalizedY, color);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    string tileFileName = $"map_tile_{tileX}_{tileY}.png";
+                    tilePaths.Add(tileFileName);
+                    Console.WriteLine($"Saving tile to {tileFileName}");
+                    tileImage.Save(tileFileName, ImageFormat.Png);
+                }
             }
+
+            return tilePaths;
         }
 
-        return image;
+        static void StitchTiles(List<string> tilePaths, int finalWidth, int finalHeight)
+        {
+            Bitmap finalImage = new Bitmap(finalWidth, finalHeight);
+
+            int tileSize = 8192;
+
+            using (Graphics g = Graphics.FromImage(finalImage))
+            {
+                foreach (var tilePath in tilePaths)
+                {
+                    string[] parts = tilePath.Split(new[] { '_', '.' }, StringSplitOptions.RemoveEmptyEntries);
+                    int tileX = int.Parse(parts[2]);
+                    int tileY = int.Parse(parts[3]);
+
+                    using (Bitmap tileImage = new Bitmap(tilePath))
+                    {
+                        g.DrawImage(tileImage, tileX * tileSize, tileY * tileSize);
+                    }
+                }
+            }
+
+            finalImage.Save("stitched_map.png", ImageFormat.Png);
+        }
     }
 }
