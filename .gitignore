@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/Release/
+.idea/
+*.DotSettings.User
+**/Lib/
+VintageStoryDBToPNG.sln.DotSettings.user
+map.db

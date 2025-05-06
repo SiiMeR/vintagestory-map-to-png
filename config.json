@@ -1,7 +1,7 @@
 ﻿{
   "MapFile": "map.db",
   "MinX": 0,
-  "MaxX": 25600,
+  "MaxX": 60000,
   "MinY": 0,
-  "MaxY": 25600
+  "MaxY": 60000
 }
